@@ -685,6 +685,7 @@ class VersionRange(_Comparable):
             make_token: Version token class to use.
         """
         self.bounds = []
+        self._init_str = range_str
         if range_str is None:
             return
 
@@ -985,7 +986,16 @@ class VersionRange(_Comparable):
         return None if inv is None else self.intersection(inv)
 
     def __str__(self):
-        return '|'.join(map(str, self.bounds))
+        if not self.bounds:
+            return ""
+
+        uniq_str = str(self.bounds[0]).replace('rc-', '')
+        for bound in self.bounds:
+            if str(bound).replace('rc-', '') != uniq_str:
+                return '|'.join(map(str, self.bounds))
+
+        # every bounds are equal, +- "rc-" => we only return one, without the rc
+        return uniq_str
 
     def __eq__(self, other):
         return isinstance(other, VersionRange) and self.bounds == other.bounds
