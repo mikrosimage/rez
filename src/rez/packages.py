@@ -3,13 +3,17 @@ from rez.resources import iter_resources, iter_child_resources, \
     get_resource, ResourceWrapper
 from rez.exceptions import PackageMetadataError, PackageRequestError, \
     ResourceError, ResourceNotFoundError
-from rez.vendor.version.version import VersionRange, re_match_rc
+from rez.vendor.version.version import VersionRange
 from rez.package_resources import package_schema, PACKAGE_NAME_REGEX
 from rez.config import config
 from rez.vendor.version.version import Version
 from rez.vendor.version.requirement import VersionedObject
 import os.path
 import sys
+import re
+
+
+re_match_rc = re.compile(r"(^|[^a-zA-Z0-9])rc[^a-zA-Z0-9]")
 
 
 def validate_package_name(pkg_name):
@@ -363,7 +367,9 @@ class Variant(_PackageBase):
             if require.range_:
                 init_str = require.range_._init_str
                 if init_str and not re_match_rc.search(init_str):
+                    old_str = str(require.range_)
                     require.range_ = VersionRange("{0}|rc-{0}".format(init_str))
+                    require.range_._str_overload = old_str
 
         return requires
 
