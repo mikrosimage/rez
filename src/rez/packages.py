@@ -3,7 +3,7 @@ from rez.resources import iter_resources, iter_child_resources, \
     get_resource, ResourceWrapper
 from rez.exceptions import PackageMetadataError, PackageRequestError, \
     ResourceError, ResourceNotFoundError
-from rez.vendor.version.version import VersionRange
+from rez.vendor.version.version import VersionRange, re_match_rc
 from rez.package_resources import package_schema, PACKAGE_NAME_REGEX
 from rez.config import config
 from rez.vendor.version.version import Version
@@ -357,9 +357,13 @@ class Variant(_PackageBase):
         if private_build_requires:
             requires = requires + (self.private_build_requires or [])
 
+        # on-the-fly requirement override: if the requirement range do not indicate a rc,
+        # match this OR rc-this
         for require in requires:
-            if require.range_ and require.range_._init_str and not 'rc' in require.range_._init_str:
-                require.range_ = VersionRange(require.range_._init_str + "|" + "rc-" + require.range_._init_str)
+            if require.range_:
+                init_str = require.range_._init_str
+                if init_str and not re_match_rc.search(init_str):
+                    require.range_ = VersionRange("{0}|rc-{0}".format(init_str))
 
         return requires
 

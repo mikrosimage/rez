@@ -26,6 +26,7 @@ import re
 
 
 re_token = re.compile(r"[a-zA-Z0-9_]+")
+re_match_rc = re.compile(r"(^|[^a-zA-Z0-9])rc[^a-zA-Z0-9]")
 
 
 @total_ordering
@@ -986,16 +987,29 @@ class VersionRange(_Comparable):
         return None if inv is None else self.intersection(inv)
 
     def __str__(self):
-        if not self.bounds:
-            return ""
 
-        uniq_str = str(self.bounds[0]).replace('rc-', '')
-        for bound in self.bounds:
-            if str(bound).replace('rc-', '') != uniq_str:
-                return '|'.join(map(str, self.bounds))
+        if not self._rc_overload_init_str:
+            return '|'.join(map(str, self.bounds))
+        else:
 
-        # every bounds are equal, +- "rc-" => we only return one, without the rc
-        return uniq_str
+            # we overloaded the range to match this + rc-this
+            # str should only return this
+
+            if not self.bounds:
+                return ""
+
+            uniq_str = re_match_rc.sub(r"\1", str(self.bounds[0]))
+            shortest_bound = str(self.bounds[0])
+            for bound in self.bounds:
+                if re_match_rc.sub(r"\1", str(bound)) != uniq_str:
+                    return '|'.join(map(str, self.bounds))
+                else:
+                    if len(str(bound)) < len(shortest_bound):
+                        shortest_bound = str(bound)
+
+            # every bounds are equal, +- "rc-"
+            # => we only return the smallest one (ie the one with the less "rc" in it)
+            return shortest_bound
 
     def __eq__(self, other):
         return isinstance(other, VersionRange) and self.bounds == other.bounds
