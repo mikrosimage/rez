@@ -67,6 +67,8 @@ class FileSystemPackageFamilyResource(PackageFamilyResource):
 
         # versioned packages
         for version_str in self._repository._get_version_dirs(self.path):
+            if not isinstance(version_str, basestring):
+                continue
             path = os.path.join(self.path, version_str)
             if not self._repository._get_file(path, "package")[0]:
                 continue
