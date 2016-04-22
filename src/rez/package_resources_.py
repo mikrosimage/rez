@@ -382,7 +382,7 @@ class VariantResourceHelper(VariantResource):
                     "parent package %s" % (self.uri, self.parent.uri))
 
             dirs = [x.safe_str() for x in reqs]
-            subpath = os.path.join(*dirs)
+            subpath = os.path.join(*dirs) if dirs else ''
             return subpath
 
     def _root(self):
