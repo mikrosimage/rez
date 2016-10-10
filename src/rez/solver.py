@@ -410,7 +410,9 @@ class _PackageVariantList(_Common):
     """A sorted list of package variants, loaded lazily."""
     def __init__(self, package_name, package_paths=None, timestamp=0,
                  building=False, package_load_callback=None):
+        print 'packagevariantlist: %s' % package_name
         self.package_name = package_name
+        # self.package_paths = '/s/apps/packages/mikros'
         self.package_paths = package_paths
         self.timestamp = timestamp
         self.building = building
@@ -419,10 +421,16 @@ class _PackageVariantList(_Common):
 
         it = iter_packages(self.package_name, paths=self.package_paths)
         entries = ([x.version, x] for x in it)
+        print 'before entry sort'
         self.entries = sorted(entries, key=lambda x: x[0], reverse=True)
+        for e in self.entries:
+            print e, type(e)
+        print 'after entry sort'
         if not self.entries:
             raise PackageFamilyNotFoundError("package family not found: %s, %s"
                                              % (package_name, self.package_paths))
+
+        print 'endinit pvl'
 
     def get_intersection(self, range, max_packages=0):
         """Get a list of variants that intersect with the given range.
@@ -459,6 +467,7 @@ class _PackageVariantList(_Common):
                     self.package_load_callback(package)
 
                 # access to timestamp causes a package load
+                print 'package: %s, %s, %s' % (package, type(package), package.path)
                 if self.timestamp and package.timestamp > self.timestamp:
                     continue
 
@@ -748,6 +757,16 @@ class PackageVariantCache(object):
                 are loaded. This value can only be True when max_packages is
                 non-zero.
         """
+
+        # if package_name == 'shotgunPythonApi':
+        #     variants = []
+        #     slice_ = _PackageVariantSlice(package_name, variants=variants)
+        #     return slice_, False, range
+
+
+
+
+
         variant_list = self.variant_lists.get(package_name)
         if variant_list is None:
             variant_list = _PackageVariantList(
@@ -772,6 +791,9 @@ class PackageVariantCache(object):
         if not variants:
             return None, False, range
 
+        print 'variants: %s, %s' % (str(variants), type(variants[0]))
+        print variants[0].__dict__
+        print 'package_name: %s' % str(package_name)
         slice_ = _PackageVariantSlice(package_name, variants=variants)
         return slice_, is_partial, range
 
@@ -782,6 +804,7 @@ class _PackageScope(_Common):
     down.
     """
     def __init__(self, package_request, solver):
+        print 'init scope: %s, %s' % (package_request, type(package_request))
         self.package_name = package_request.name
         self.solver = solver
         self.variant_slice = None
@@ -803,6 +826,8 @@ class _PackageScope(_Common):
                     # Overwrite range
                     package_request.range_ = VersionRange(str(self.variant_slice.variants[0].version))
             self._update()
+
+        print 'scope: %s' % str(self)
 
     @property
     def is_conflict(self):
@@ -1015,6 +1040,7 @@ class _ResolvePhase(_Common):
         return phase
 
 
+    # @profiler
     def solve(self, level=None):
         """Attempt to solve the phase.
 
@@ -1640,7 +1666,10 @@ class Solver(_Common):
             self.pr("merged request: %s", s)
 
         # create the initial phase
+        print '#### starting resolution'
+        sTime = time.time()
         phase = _ResolvePhase(self.request_list.requirements, solver=self)
+        print '#### resolution ended in %.4f s' % (time.time()-sTime)
         self._push_phase(phase)
 
     @property
@@ -1968,6 +1997,7 @@ class Solver(_Common):
 
         end_time = time.time()
         self.load_time += (end_time - start_time)
+        print slice, type(slice)
         return slice
 
     def _push_phase(self, phase):

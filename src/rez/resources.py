@@ -73,10 +73,17 @@ def _updated_schema(schema, items=None, rm_keys=None):
 
 @config.lru_cache("resource_caching", "resource_caching_maxsize")
 def _listdir(path, is_file=None):
+    print 'listing: %s [%s]' % (path, is_file)
+
+    # import traceback
+    # traceback.print_stack()
+
     names = []
     if os.path.exists(path):
         for name in os.listdir(path):
             filepath = os.path.join(path, name)
+            # if is_file is not None:
+            #     print '%s' % filepath
             if is_file is None or os.path.isfile(filepath) == is_file:
                 names.append(name)
     return names

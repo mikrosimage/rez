@@ -7,6 +7,7 @@ from rez.package_resources import package_schema, PACKAGE_NAME_REGEX
 from rez.config import config
 from rez.vendor.version.version import Version
 from rez.vendor.version.requirement import VersionedObject
+from rez.package_resources import VersionedPackageResource
 import os.path
 import sys
 
@@ -67,6 +68,29 @@ def iter_packages(name=None, range=None, paths=None):
     Returns:
         `Package` object iterator.
     """
+    print 'iter_packages'
+
+    # paths = ['/s/apps/packages/mikros']
+
+    if name == 'shotgunPythonApi':
+        resource = VersionedPackageResource(
+            '/s/apps/packages/mikros/shotgunPythonApi/3.0.22.mikros.1.2/package.py',
+            {
+                'ext': 'py',
+                'version': '3.0.22.mikros.1.2',
+                'name': 'shotgunPythonApi',
+                'search_path': '/s/apps/packages/mikros'
+            }
+        )
+
+        pkg = Package(resource)
+        # pkg._cachedproperties = {'version': Version('3.0.22.mikros.1.1'), 'name': 'shotgunPythonApi', 'qualified_name': 'shotgunPythonApi-3.0.22.mikros.1.1', 'search_path': '/s/apps/packages/mikros'}
+
+        print 'test iterpackage pkg: ', pkg, type(pkg), pkg.__dict__
+
+        yield pkg
+        return
+
     consumed = set()
     for pkg in _iter_packages(name, paths):
         handle = (pkg.name, pkg.version)
@@ -74,6 +98,7 @@ def iter_packages(name=None, range=None, paths=None):
             if range and pkg.version not in range:
                 continue
             consumed.add(handle)
+            print 'iterpackage pkg: ', pkg, type(pkg), pkg.__dict__
             yield pkg
 
 
@@ -350,6 +375,7 @@ class Variant(_PackageBase):
         Returns:
             List of `Requirement` objects.
         """
+        # return []
         requires = self.requires or []
         if build_requires:
             requires = requires + (self.build_requires or [])
