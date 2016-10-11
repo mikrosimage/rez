@@ -38,11 +38,40 @@ def iter_package_families(paths=None):
             root_resource_key="folder.packages_root"):
         yield PackageFamily(resource)
 
+# TODO bahh global
+_fixed_packages = {}
+
+def merge_fixed_packages(fixed_packages):
+    global _fixed_packages
+    _fixed_packages = fixed_packages
+
 
 def _iter_packages(name=None, paths=None):
     variables = {}
     if name is not None:
         variables["name"] = name
+
+    try:
+        fast_val = _fixed_packages[name]
+        root = fast_val['root']
+        base = os.path.join(root, name)
+        versions = fast_val['versions']
+        for version in versions:
+            yield Package(VersionedPackageResource(
+                os.path.join(base, version, 'package.py'),
+                {
+                    'ext': 'py',
+                    'version': version,
+                    'name': name,
+                    'search_path': root,
+                }
+            ))
+        # paths = [path for path in paths if path.startswith('/datas')]
+        return
+
+    except KeyError:
+        pass
+
     for resource in iter_resources(
             resource_keys='package.*',
             search_path=paths,
@@ -69,27 +98,6 @@ def iter_packages(name=None, range=None, paths=None):
         `Package` object iterator.
     """
     print 'iter_packages'
-
-    # paths = ['/s/apps/packages/mikros']
-
-    if name == 'shotgunPythonApi':
-        resource = VersionedPackageResource(
-            '/s/apps/packages/mikros/shotgunPythonApi/3.0.22.mikros.1.2/package.py',
-            {
-                'ext': 'py',
-                'version': '3.0.22.mikros.1.2',
-                'name': 'shotgunPythonApi',
-                'search_path': '/s/apps/packages/mikros'
-            }
-        )
-
-        pkg = Package(resource)
-        # pkg._cachedproperties = {'version': Version('3.0.22.mikros.1.1'), 'name': 'shotgunPythonApi', 'qualified_name': 'shotgunPythonApi-3.0.22.mikros.1.1', 'search_path': '/s/apps/packages/mikros'}
-
-        print 'test iterpackage pkg: ', pkg, type(pkg), pkg.__dict__
-
-        yield pkg
-        return
 
     consumed = set()
     for pkg in _iter_packages(name, paths):

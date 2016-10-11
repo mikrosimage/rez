@@ -62,6 +62,7 @@ package_schema = Schema({
     # custom keys
     Optional('custom'):                 object,
     Optional(basestring):               object,
+    Optional('fixed_requires'):         dict,
 
     # a dict for internal use
     Optional('_internal'):              dict,
@@ -248,6 +249,7 @@ class BasePackageResource(FileResource):
             # custom keys
             Optional('custom'):                 dict,
             Optional(basestring):               object,
+            Optional('fixed_requires'):         dict,
 
             # a dict for internal use
             Optional('_internal'):              dict,
@@ -307,6 +309,11 @@ class BaseVariantResource(BasePackageResource):
         if "variants" in data:
             data = data.copy()
             del data["variants"]
+
+        fixed_requires = data.get("fixed_requires")
+        if fixed_requires:
+            from rez.packages import merge_fixed_packages
+            merge_fixed_packages(data.get("fixed_requires", {}))
 
         idx = self.variables["index"]
         if idx is not None:
