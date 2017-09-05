@@ -377,7 +377,10 @@ def iter_packages(name, range_=None, paths=None):
     seen = set()
     for repo, family_resource in entries:
         for package_resource in repo.iter_packages(family_resource):
-            key = (package_resource.name, package_resource.version)
+            try:
+                key = (package_resource.name, package_resource.version)
+            except TypeError: # Groups and packages with the same name
+                continue # Very ugly :'(
             if key in seen:
                 continue
             ## MKROS: Manage groups named as packages
