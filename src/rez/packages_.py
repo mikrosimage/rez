@@ -18,11 +18,6 @@ from rez.system import system
 import os.path
 import sys
 
-## MIKROS: Manage rc version in variants
-import re
-
-re_match_rc = re.compile(r"(^|[^a-zA-Z0-9])rc[^a-zA-Z0-9]")
-## END MIKROS
 
 #------------------------------------------------------------------------------
 # package-related classes
@@ -232,27 +227,6 @@ class Variant(PackageBaseResourceWrapper):
             requires = requires + (self.build_requires or [])
         if private_build_requires:
             requires = requires + (self.private_build_requires or [])
-
-        ## MIKROS: Manage rc versions in variants
-        # on-the-fly requirement override: if the requirement range do not indicate a rc,
-        # match this OR rc-this
-        for require in requires:
-            if require.range_:
-                init_str = require.range_._init_str
-                if init_str and not re_match_rc.search(init_str):
-                    old_str = str(require.range_)
-                    # Manage < special case
-                    if init_str[0] == '<':
-                        vrange = '{0}|<rc-{0}'.format(init_str[1:])
-                    elif ''.join(init_str[0:2]) == '==':
-                        # In this case consider we want the exact vesrion
-                        vrange = init_str
-                    else:
-                        vrange = '{0}|rc-{0}'.format(init_str)
-                    require.range_ = VersionRange(vrange)
-                    require.range_._str_overload = old_str
-        ## END MIKROS
-
         return requires
 
     def install(self, path, dry_run=False, overrides=None):

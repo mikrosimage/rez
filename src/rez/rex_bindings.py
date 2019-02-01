@@ -71,7 +71,7 @@ class VersionBinding(Binding):
     def full(self):
         """Full version as a tuple (major, minor, patch)."""
         return (str(self.major), str(self.minor), str(self.patch))
-    ## END MIKROS ================
+    ## ENd MIKROS ================
 
     def as_tuple(self):
         return self[:len(self)]
