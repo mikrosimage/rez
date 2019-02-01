@@ -78,75 +78,14 @@ class Client(object):
         if not self.servers:
             return
 
-        ## MIKROS: Skip local and prod packages ====================
-        tupleKey = eval(key)
-        ## END MIKROS ================
-
         key = self._qualified_key(key)
         hashed_key = self.key_hasher(key)
-
-        ## MIKROS: Manage external functions and string variables in package.py ====================
-        extVars = {}
-
-        # Pop all custom functions
-        if isinstance(val, dict):
-
-            for k, v in val.copy().iteritems():
-
-                # Skip post_install function other than the ones known by rez
-                if k in ['post_install']:
-                    val.pop(k)
-                # Skip isolated module imports
-                elif isinstance(v, ModuleType):
-                    val.pop(k)
-                elif (k not in ['requires', 'variants']
-                    and not k.endswith('commands')):
-                    extVars[k] = v
-
-            # Add other function code and external variables to commands' code
-            for com in ['pre_commands', 'commands', 'post_commands']:
-                if com in val:
-                    for k, v in extVars.iteritems():
-                        if k in val[com].source:
-                            if v.__class__.__name__ == 'SourceCode':
-                                val[com].source = '\n'.join([v.code,
-                                                             '',
-                                                             val[com].source])
-                            # Only manage string variables for the moment
-                            elif isinstance(v, str):
-                                val[com].source = '\n'.join(['{0} = """{1}"""'.format(k, v.decode('string_escape')),
-                                                             '',
-                                                             val[com].source])
-
-        ## END MIKROS ================
         val = (key, val)
 
-        ## MIKROS: Don't put local and prod packages in cache ====================
-        if tupleKey[0] == 'package_file':
-
-            package_file = tupleKey[1]
-            devPackageRoot = os.path.realpath(
-                os.environ.get('REZ_DEV_PACKAGES_ROOT'))
-            prodPackagePath = os.environ.get('REZ_PROD_PACKAGES_PATH')
-            if package_file:
-                if devPackageRoot and package_file.startswith(devPackageRoot):
-                    return
-                if prodPackagePath and package_file.startswith(prodPackagePath):
-                    return
-        ## END MIKROS ================
-
-        ## MIKROS: Traceback to have concerned package ====================
-        try:
-            self.client.set(key=hashed_key,
-                            val=val,
-                            time=time,
-                            min_compress_len=min_compress_len)
-        except:
-            print('=== val ===')
-            print(val)
-            import traceback
-            traceback.print_exc()
-        ## END MIKROS ================
+        self.client.set(key=hashed_key,
+                        val=val,
+                        time=time,
+                        min_compress_len=min_compress_len)
         self.logger("SET: %s", key)
 
     def get(self, key):
