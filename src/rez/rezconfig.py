@@ -741,7 +741,7 @@ use_pyqt = False
 gui_threads = True
 
 
-# context_tracking_host = 'sliver.mikros.int:5672'
+context_tracking_host = None#'sliver.mikros.int:5672'
 # context_tracking_extra_fields = {
 #     "pythonPath": "$PYTHONPATH"
 # }
